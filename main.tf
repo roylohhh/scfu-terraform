@@ -9,14 +9,14 @@ resource "aws_lambda_function" "lambda_dynamodb" {
   filename      = "${path.module}/lambda/putitem.zip"
   function_name = "LambdaWriteDynamoDBFunction"
   role          = aws_iam_role.lambda_exec_role.arn  
-  handler       = "putitem.putItemHandler"
+  handler       = "putitem.putFormItemHandler"
   runtime       = "nodejs20.x"  # Updated runtime to the latest supported version for Node.js
 
   source_code_hash = filebase64sha256("${path.module}/lambda/putitem.zip")
 
   environment {
     variables = {
-      DynamoDB_Table = "consent_form_table"
+      PARTICIPANT_CONSENT_TABLE = "consent_form_table"
     }
   }
 

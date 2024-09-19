@@ -32,6 +32,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Action = [
           "dynamodb:DescribeTable",
           "dynamodb:PutItem",
+          "dynamodb:BatchWriteItem",
           "dynamodb:Scan",
           "s3:PutObject",
           "s3:GetObject",
