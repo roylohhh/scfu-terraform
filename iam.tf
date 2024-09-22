@@ -36,14 +36,14 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "dynamodb:Scan",
           "s3:PutObject",
           "s3:GetObject",
-          "logs:CreateLogGroup",         
-          "logs:CreateLogStream",        
-          "logs:PutLogEvents"           
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
         ],
         Resource = [
           aws_dynamodb_table.consent_form_table.arn,
           "${aws_s3_bucket.lambda_layer_bucket.arn}/*",
-           "arn:aws:logs:*:*:*" 
+          "arn:aws:logs:*:*:*"
         ]
       }
     ]
