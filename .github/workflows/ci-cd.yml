@@ -1,0 +1,36 @@
+name: CI/CD-pipeline
+
+on:  
+  push:  
+    branches:  
+      - main  
+      - develop
+      - release/*
+      - feature/*
+  pull_request:  
+    branches:  
+      - main  
+      - develop
+      - release/*
+
+jobs:  
+  unit-tests:
+    runs-on: ubuntu-latest  
+    steps:  
+    - uses: actions/checkout@v3  
+
+    - name: Set up Node.js  
+      uses: actions/setup-node@v3  
+      with:  
+        node-version: "20" 
+
+    - name: Install dependencies 
+      run: npm install 
+      working-directory: lambda 
+
+    - name: Run unit tests
+      run: npm run test -- tests/unit/*.test.js  
+      working-directory: lambda
+
+    env:
+      TABLE_NAME: 'ConsentFormsTable'  # Setting the environment variable for the tests
