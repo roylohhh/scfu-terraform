@@ -32,5 +32,4 @@ jobs:
       run: npm run test -- tests/unit/*.test.js  
       working-directory: lambda
 
-    env:
-      TABLE_NAME: 'ConsentFormsTable'  # Setting the environment variable for the tests
+  

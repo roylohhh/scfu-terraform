@@ -8,3 +8,4 @@ lambda-layer/nodejs/node_modules
 lambda/node_modules
 
 *.zip
+.env
