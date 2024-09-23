@@ -25,12 +25,14 @@ const hashData = (data) => {
 const client = new DynamoDBClient({
     region: 'ap-southeast-2',
 });
+
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 // Get the DynamoDB table name from environment variables
 const tableName = process.env.PARTICIPANT_CONSENT_TABLE;
 
 const putFormItemHandler = async (event) => {
+
     if (event.httpMethod !== 'POST') {
         throw new Error(`postMethod only accepts POST method, you tried: ${event.httpMethod} method.`);
     }
