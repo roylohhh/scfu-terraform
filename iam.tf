@@ -45,6 +45,17 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "${aws_s3_bucket.lambda_layer_bucket.arn}/*",
           "arn:aws:logs:*:*:*"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject"
+        ],
+        Resource = [
+          "${aws_s3_bucket.csiro_consent_forms.arn}/*",
+          "arn:aws:logs:*:*:*"
+        ]
       }
     ]
   })
