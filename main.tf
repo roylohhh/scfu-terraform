@@ -19,3 +19,18 @@ module "lambda_dynamodb" {
   layers = [aws_lambda_layer_version.my_layer.arn]
 }
 
+# Call lambda module for S3 interaction
+module "lambda_put_s3" {
+  source = "./modules/lambda-module"
+
+  function_name        = "LambdaPutS3Object"
+  handler              = "puts3object.handler"
+  runtime              = "nodejs20.x"
+  filename             = "${path.module}/lambda/puts3object.zip"
+  lambda_exec_role_arn = aws_iam_role.lambda_exec_role.arn
+  environment_variables = {
+    S3_BUCKET_NAME = aws_s3_bucket.csiro_consent_forms.bucket
+  }
+  layers = [aws_lambda_layer_version.my_layer.arn]
+}
+
