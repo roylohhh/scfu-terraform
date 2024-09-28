@@ -2,7 +2,6 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { PDFDocument, rgb, degrees } = require('pdf-lib');
 
 const client = new S3Client({ region: 'ap-southeast-2' });
-// const BUCKET_NAME = 'csiro-consent-forms';
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 exports.handler = async (event) => {
@@ -14,12 +13,15 @@ exports.handler = async (event) => {
       throw new Error('Missing required parameters: base64Data, fileName');
     }
 
+    // Load the existing PDF bytes
     const existingPdfBytes = Buffer.from(base64Data, 'base64');
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
+    // Add watermark to each page of the PDF
     const pages = pdfDoc.getPages();
     for (const page of pages) {
-      const { width, height } = page.getSize();
+      const { width, height } = page.getSize(); // width and height are scoped here
+      console.log(`Applying watermark on page: width=${width}, height=${height}`);
       page.drawText('testmark', {
         x: width / 4,
         y: height / 2,
@@ -30,8 +32,11 @@ exports.handler = async (event) => {
       });
     }
 
+    // Save the modified PDF with the watermark
     const modifiedPdfBytes = await pdfDoc.save();
+    console.log(`Modified PDF size: ${modifiedPdfBytes.length} bytes`);
 
+    // Upload the modified PDF to S3
     const params = {
       Bucket: BUCKET_NAME,
       Key: fileName,
@@ -43,6 +48,7 @@ exports.handler = async (event) => {
     const uploadResult = await client.send(command);
     const checksum = uploadResult.ETag;
 
+    // Return success response
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -52,7 +58,9 @@ exports.handler = async (event) => {
         s3Hash: checksum
       }),
     };
+
   } catch (error) {
+    console.error('Error during processing:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({

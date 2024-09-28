@@ -14,3 +14,11 @@ output "bucket_suffix" {
   value       = random_id.bucket_suffix.hex
   description = "Random ID generated for bucket naming"
 }
+
+output "dynamodb_api_id" {
+  value = aws_api_gateway_rest_api.dynamodb_api.id
+}
+
+output "s3_api_id" {
+  value = aws_api_gateway_rest_api.s3_api.id
+}
