@@ -51,11 +51,6 @@ exports.handler = async (event) => {
     // Return success response
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-      },
       body: JSON.stringify({
         message: 'Consent form uploaded successfully with watermark',
         data: uploadResult,
@@ -68,11 +63,6 @@ exports.handler = async (event) => {
     console.error('Error during processing:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-      },
       body: JSON.stringify({
         message: 'Consent form upload failed',
         error: error.message,
