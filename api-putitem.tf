@@ -16,8 +16,7 @@ resource "aws_api_gateway_method" "dynamodb_options_method" {
   rest_api_id   = aws_api_gateway_rest_api.dynamodb_api.id
   resource_id   = aws_api_gateway_resource.put_item_resource.id
   http_method   = "OPTIONS"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.dynamodb_authorizer.id
+  authorization = "NONE"
 }
 
 # API Gateway OPTIONS Method Response (CORS)
@@ -76,25 +75,12 @@ resource "aws_api_gateway_integration_response" "dynamodb_options_integration_re
   ]
 }
 
-
-
-# Cognito User Pool Authorizer
-resource "aws_api_gateway_authorizer" "dynamodb_authorizer" {
-  name = "dynamodb_authorizer"
-  rest_api_id = aws_api_gateway_rest_api.dynamodb_api.id
-  type = "COGNITO_USER_POOLS"
-  provider_arns = [
-    aws_cognito_user_pool.user_pool.arn
-  ]
-}
-
 # API Gateway POST Method (for DynamoDB Lambda Integration)
 resource "aws_api_gateway_method" "put_item_method" {
   rest_api_id   = aws_api_gateway_rest_api.dynamodb_api.id
   resource_id   = aws_api_gateway_resource.put_item_resource.id
   http_method   = "POST"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.dynamodb_authorizer.id
+  authorization = "NONE"
 }
 
 # API Gateway Integration (Connect POST /put-item to the Lambda function)
