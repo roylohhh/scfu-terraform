@@ -1,0 +1,14 @@
+Outputs:
+
+bucket_suffix = "5ae32fb0"
+cognito_client_id = "5ffhclnkm45sg16m4mjqkl6cab"
+dynamodb_api_id = "bqsoisreed"
+lambda_layer_bucket_name = "lambda-layer-bucket-sqyxaum0-5ae32fb0"
+s3_api_id = "mgqb4me137"
+unique_suffix = "sqyxaum0"
+user_pool_id = "ap-southeast-2_pKOc3k05O"
+
+export EMAIL="cognito.overdress445@passinbox.com"
+export PASSWORD="n0TS3cure!!"
+export CLIENT_ID=<>
+export POOL_ID=<>
