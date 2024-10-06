@@ -4,11 +4,21 @@ resource "aws_api_gateway_rest_api" "s3_api" {
   description = "API Gateway for S3 Lambda function"
 }
 
-# API Gateway Resource 
+# API Gateway Resource
 resource "aws_api_gateway_resource" "s3_put_object_resource" {
   rest_api_id = aws_api_gateway_rest_api.s3_api.id
   parent_id   = aws_api_gateway_rest_api.s3_api.root_resource_id
   path_part   = "put-object"
+}
+
+# Cognito User Pool Authorizer
+resource "aws_api_gateway_authorizer" "s3_authorizer" {
+  name        = "s3_authorizer"
+  rest_api_id = aws_api_gateway_rest_api.s3_api.id
+  type        = "COGNITO_USER_POOLS"
+  provider_arns = [
+    aws_cognito_user_pool.user_pool.arn
+  ]
 }
 
 # API Gateway OPTIONS Method for CORS (Preflight request)
@@ -16,7 +26,8 @@ resource "aws_api_gateway_method" "s3_options_method" {
   rest_api_id   = aws_api_gateway_rest_api.s3_api.id
   resource_id   = aws_api_gateway_resource.s3_put_object_resource.id
   http_method   = "OPTIONS"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.s3_authorizer.id
 }
 
 # API Gateway OPTIONS Method Response (CORS)
@@ -27,9 +38,10 @@ resource "aws_api_gateway_method_response" "s3_options_method_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true,
-    "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
   }
 
   response_models = {
@@ -65,9 +77,10 @@ resource "aws_api_gateway_integration_response" "s3_options_integration_response
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'*'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
   depends_on = [
@@ -80,7 +93,8 @@ resource "aws_api_gateway_method" "s3_put_object_method" {
   rest_api_id   = aws_api_gateway_rest_api.s3_api.id
   resource_id   = aws_api_gateway_resource.s3_put_object_resource.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.s3_authorizer.id
 }
 
 # API Gateway Method Response for POST (CORS)
@@ -91,7 +105,7 @@ resource "aws_api_gateway_method_response" "s3_put_object_method_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
     "method.response.header.Access-Control-Allow-Headers" = true
   }
@@ -124,7 +138,7 @@ resource "aws_lambda_permission" "s3_apigw_lambda_permission" {
   source_arn    = "${aws_api_gateway_rest_api.s3_api.execution_arn}/*/*"
 }
 
-# Deploy the API Gateway for S3 Lambda  
+# Deploy the API Gateway for S3 Lambda
 resource "aws_api_gateway_deployment" "s3_api_gateway_deployment" {
   depends_on = [aws_api_gateway_integration.s3_lambda_integration]
 

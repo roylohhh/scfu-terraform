@@ -4,11 +4,21 @@ resource "aws_api_gateway_rest_api" "dynamodb_api" {
   description = "API Gateway for DynamoDB Lambda function"
 }
 
-# API Gateway Resource 
+# API Gateway Resource
 resource "aws_api_gateway_resource" "put_item_resource" {
   rest_api_id = aws_api_gateway_rest_api.dynamodb_api.id
   parent_id   = aws_api_gateway_rest_api.dynamodb_api.root_resource_id
   path_part   = "put-item"
+}
+
+# Cognito User Pool Authorizer
+resource "aws_api_gateway_authorizer" "dynamodb_authorizer" {
+  name        = "dynamodb_authorizer"
+  rest_api_id = aws_api_gateway_rest_api.dynamodb_api.id
+  type        = "COGNITO_USER_POOLS"
+  provider_arns = [
+    aws_cognito_user_pool.user_pool.arn
+  ]
 }
 
 # API Gateway OPTIONS Method for CORS
@@ -16,7 +26,8 @@ resource "aws_api_gateway_method" "dynamodb_options_method" {
   rest_api_id   = aws_api_gateway_rest_api.dynamodb_api.id
   resource_id   = aws_api_gateway_resource.put_item_resource.id
   http_method   = "OPTIONS"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.dynamodb_authorizer.id
 }
 
 # API Gateway OPTIONS Method Response (CORS)
@@ -27,9 +38,10 @@ resource "aws_api_gateway_method_response" "dynamodb_options_method_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true,
-    "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
   }
 
   response_models = {
@@ -65,9 +77,10 @@ resource "aws_api_gateway_integration_response" "dynamodb_options_integration_re
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'*'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
   depends_on = [
@@ -80,7 +93,8 @@ resource "aws_api_gateway_method" "put_item_method" {
   rest_api_id   = aws_api_gateway_rest_api.dynamodb_api.id
   resource_id   = aws_api_gateway_resource.put_item_resource.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.dynamodb_authorizer.id
 }
 
 # API Gateway Integration (Connect POST /put-item to the Lambda function)
@@ -102,7 +116,7 @@ resource "aws_lambda_permission" "dynamodb_apigw_lambda_permission" {
   source_arn    = "${aws_api_gateway_rest_api.dynamodb_api.execution_arn}/*/*"
 }
 
-# Deploy the API Gateway  
+# Deploy the API Gateway
 resource "aws_api_gateway_deployment" "dynamodb_api_gateway_deployment" {
   depends_on = [aws_api_gateway_integration.dynamodb_lambda_integration]
 
