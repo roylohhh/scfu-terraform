@@ -1,7 +1,7 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { PDFDocument, rgb, degrees } = require('pdf-lib');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { PDFDocument, rgb, degrees } = require("pdf-lib");
 
-const client = new S3Client({ region: 'ap-southeast-2' });
+const client = new S3Client({ region: "ap-southeast-2" });
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 exports.handler = async (event) => {
@@ -10,25 +10,27 @@ exports.handler = async (event) => {
     const { base64Data, fileName } = body;
 
     if (!base64Data || !fileName) {
-      throw new Error('Missing required parameters: base64Data, fileName');
+      throw new Error("Missing required parameters: base64Data, fileName");
     }
 
     // Load the existing PDF bytes
-    const existingPdfBytes = Buffer.from(base64Data, 'base64');
+    const existingPdfBytes = Buffer.from(base64Data, "base64");
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
     // Add watermark to each page of the PDF
     const pages = pdfDoc.getPages();
     for (const page of pages) {
       const { width, height } = page.getSize(); // width and height are scoped here
-      console.log(`Applying watermark on page: width=${width}, height=${height}`);
-      page.drawText('testmark', {
+      console.log(
+        `Applying watermark on page: width=${width}, height=${height}`,
+      );
+      page.drawText("testmark", {
         x: width / 4,
         y: height / 2,
         size: 50,
         opacity: 0.5,
         rotate: degrees(45),
-        color: rgb(0.75, 0.75, 0.75)
+        color: rgb(0.75, 0.75, 0.75),
       });
     }
 
@@ -41,7 +43,7 @@ exports.handler = async (event) => {
       Bucket: BUCKET_NAME,
       Key: fileName,
       Body: Buffer.from(modifiedPdfBytes),
-      ContentType: 'application/pdf',
+      ContentType: "application/pdf",
     };
 
     const command = new PutObjectCommand(params);
@@ -52,29 +54,32 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Credentials": "true",
       },
       body: JSON.stringify({
-        message: 'Consent form uploaded successfully with watermark',
+        message: "Consent form uploaded successfully with watermark",
         data: uploadResult,
         s3ObjectKey: fileName,
-        s3Hash: checksum
+        s3Hash: checksum,
       }),
     };
-
   } catch (error) {
-    console.error('Error during processing:', error);
+    console.error("Error during processing:", error);
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Credentials": "true",
       },
       body: JSON.stringify({
-        message: 'Consent form upload failed',
+        message: "Consent form upload failed",
         error: error.message,
       }),
     };

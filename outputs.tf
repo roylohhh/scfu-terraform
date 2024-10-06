@@ -15,12 +15,8 @@ output "bucket_suffix" {
   description = "Random ID generated for bucket naming"
 }
 
-output "dynamodb_api_id" {
-  value = aws_api_gateway_rest_api.dynamodb_api.id
-}
-
-output "s3_api_id" {
-  value = aws_api_gateway_rest_api.s3_api.id
+output "csiro_api_id" {
+  value = aws_api_gateway_rest_api.csiro_api.id
 }
 
 output "user_pool_id" {
