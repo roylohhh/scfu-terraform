@@ -42,7 +42,6 @@ resource "aws_iam_role_policy" "lambda_policy" {
         ],
         Resource = [
           aws_dynamodb_table.consent_form_table.arn,
-          "${aws_s3_bucket.lambda_layer_bucket.arn}/*",
           "arn:aws:logs:*:*:*"
         ]
       },

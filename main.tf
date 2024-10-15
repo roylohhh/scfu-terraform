@@ -6,31 +6,28 @@ provider "aws" {
 
 # Call the Lambda module for DynamoDB interaction
 module "lambda_dynamodb" {
-  source = "./modules/lambda-module"
-
-  function_name        = "LambdaWriteDynamoDBFunction"
-  handler              = "putitem.putFormItemHandler"
-  runtime              = "nodejs20.x"
-  filename             = "${path.module}/lambda/putitem.zip"
-  lambda_exec_role_arn = aws_iam_role.lambda_exec_role.arn
+  source                = "./modules/lambda-module"
+  function_name         = "LambdaWriteDynamoDBFunction"
+  handler               = "putitem.putFormItemHandler"
+  runtime               = "nodejs20.x"
+  filename              = "${path.module}/lambda/build/putitem.zip"
+  lambda_exec_role_arn  = aws_iam_role.lambda_exec_role.arn
   environment_variables = {
     PARTICIPANT_CONSENT_TABLE = "consent_form_table"
   }
-  layers = [aws_lambda_layer_version.my_layer.arn]
+  timeout               = 15
 }
 
-# Call lambda module for S3 interaction
+# Call the Lambda module for S3 interaction
 module "lambda_put_s3" {
-  source = "./modules/lambda-module"
-
-  function_name        = "LambdaPutS3Object"
-  handler              = "puts3object.handler"
-  runtime              = "nodejs20.x"
-  filename             = "${path.module}/lambda/puts3object.zip"
-  lambda_exec_role_arn = aws_iam_role.lambda_exec_role.arn
+  source                = "./modules/lambda-module"
+  function_name         = "LambdaPutS3Object"
+  handler               = "puts3object.handler"
+  runtime               = "nodejs20.x"
+  filename              = "${path.module}/lambda/build/puts3object.zip"
+  lambda_exec_role_arn  = aws_iam_role.lambda_exec_role.arn
   environment_variables = {
     S3_BUCKET_NAME = aws_s3_bucket.csiro_consent_forms.bucket
   }
-  layers = [aws_lambda_layer_version.my_layer.arn]
+  timeout               = 15
 }
-

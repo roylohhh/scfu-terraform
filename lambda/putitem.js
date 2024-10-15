@@ -27,7 +27,7 @@ const putFormItemHandler = async (event) => {
       return {
         statusCode: 405,
         headers: {
-          "Access-Control-Allow-Origin": "http://10.0.0.16:3000",
+          "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
           "Access-Control-Allow-Methods": "POST,OPTIONS",
           "Access-Control-Allow-Headers":
             "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
@@ -43,7 +43,7 @@ const putFormItemHandler = async (event) => {
       return {
         statusCode: 500,
         headers: {
-          "Access-Control-Allow-Origin": "http://10.0.0.16:3000",
+          "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
           "Access-Control-Allow-Methods": "POST,OPTIONS",
           "Access-Control-Allow-Headers":
             "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
@@ -63,7 +63,7 @@ const putFormItemHandler = async (event) => {
       return {
         statusCode: 400,
         headers: {
-          "Access-Control-Allow-Origin": "http://10.0.0.16:3000",
+          "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
           "Access-Control-Allow-Methods": "POST,OPTIONS",
           "Access-Control-Allow-Headers":
             "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
@@ -109,7 +109,7 @@ const putFormItemHandler = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "http://10.0.0.16:3000",
+        "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
         "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
@@ -123,7 +123,7 @@ const putFormItemHandler = async (event) => {
     return {
       statusCode: 500,
       headers: {
-        "Access-Control-Allow-Origin": "http://10.0.0.16:3000",
+        "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
         "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",

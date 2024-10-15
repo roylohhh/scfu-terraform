@@ -4,6 +4,7 @@ resource "aws_lambda_function" "lambda_function" {
   role          = var.lambda_exec_role_arn
   handler       = var.handler
   runtime       = var.runtime
+  timeout       = var.timeout
 
   source_code_hash = filebase64sha256(var.filename)
 

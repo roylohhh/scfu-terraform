@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "http://scfu-frontend.s3-website-ap-southeast-2.amazonaws.com",
         "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
