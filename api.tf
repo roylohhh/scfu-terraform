@@ -116,7 +116,7 @@ resource "aws_api_gateway_integration" "execute_integration" {
   type                    = "AWS"
   uri                     = "arn:aws:apigateway:ap-southeast-2:states:action/StartSyncExecution"
 
-  credentials = aws_iam_role.step_functions_exec_role.id
+  credentials = aws_iam_role.step_functions_exec_role.arn
 }
 
 

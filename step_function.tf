@@ -1,6 +1,6 @@
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "csiro_state_machine"
-  role_arn = aws_iam_role.step_functions_exec_role.id
+  role_arn = aws_iam_role.step_functions_exec_role.arn
 
   definition = jsonencode(
 
@@ -9,7 +9,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
       "States" : {
         "Validate Data" : {
           "Type" : "Task",
-          "Resource" : "${aws_lambda_function.validate_data.arn}", // TODO:Update how lambda ARN is being imported
+          "Resource" : module.lambda_validate_data.lambda_function_arn, // TODO:Update how lambda ARN is being imported
           "Parameters" : {
             "formData.$" : "$.formData",
             "scannedForm.$" : "$.scannedForm",
@@ -44,7 +44,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
         },
         "Upload PDF" : {
           "Type" : "Task",
-          "Resource" : "${aws_lambda_function.upload_pdf.arn}", //TODO: Update how lambda ARN is being imported
+          "Resource" : module.lambda_put_s3.lambda_function_arn, //TODO: Update how lambda ARN is being imported
           "Parameters" : {
             "scannedForm.$" : "$.scannedForm",
             "admin.$" : "$.admin",
@@ -93,7 +93,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
         },
         "Write to DynamoDB" : {
           "Type" : "Task",
-          "Resource" : "${aws_lambda_function.database_write.arn}", //TODO: Update how lambda ARN is being imported
+          "Resource" : module.lambda_dynamodb.lambda_function_arn, //TODO: Update how lambda ARN is being imported
           "Parameters" : {
             "formData.$" : "$.formData",
             "admin.$" : "$.admin",
@@ -148,5 +148,9 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
     }
   )
 
-  depends_on = [aws_lambda_function.validate_data, aws_lambda_function.upload_pdf, aws_lambda_function.database_write] //TODO: Update how lambda ARN is being imported
+  depends_on = [
+    module.lambda_validate_data,
+    module.lambda_put_s3,
+    module.lambda_dynamodb
+  ] //TODO: Update how lambda ARN is being imported
 }

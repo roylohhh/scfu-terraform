@@ -11,6 +11,10 @@ async function buildLambda() {
       entry: path.join(__dirname, "puts3object.js"),  // Correct path for puts3object.js
       outfile: path.join(__dirname, "build", "puts3object.js"),  // Output to build folder
     },
+    {
+      entry: path.join(__dirname, "validateform.js"), // Correct path for validateform.js
+      outfile: path.join(__dirname, "build", "validateform.js"), // Output to build folder
+    }
   ];
 
   for (const func of functions) {

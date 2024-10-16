@@ -52,7 +52,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "s3:GetObject"
         ],
         Resource = [
-          "${aws_s3_bucket.csiro_consent_forms.arn}/*",
+          aws_s3_bucket.csiro_consent_forms.arn,
           "arn:aws:logs:*:*:*"
         ]
       }
@@ -91,11 +91,9 @@ resource "aws_iam_role_policy" "step_functions_lambda_policy" {
         Effect = "Allow"
         Action = ["lambda:InvokeFunction"]
         Resource = [
-          aws_lambda_function.validate_data.arn,
-          aws_lambda_function.upload_pdf.arn,
-          aws_lambda_function.database_write.arn
-
-          // TODO:Update how lambda ARN is being imported
+          module.lambda_validate_data.lambda_function_arn,
+          module.lambda_put_s3.lambda_function_arn,
+          module.lambda_dynamodb.lambda_function_arn
         ]
       }
     ]
@@ -133,7 +131,7 @@ resource "aws_iam_role_policy" "api_gateway_step_functions_policy" {
         Effect = "Allow"
         Action = ["states:StartSyncExecution"]
         Resource = [
-          aws_sfn_state_machine.csiro_state_machine.arn
+          aws_sfn_state_machine.sfn_state_machine.arn 
         ]
       }
     ]
