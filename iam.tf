@@ -52,7 +52,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "s3:GetObject"
         ],
         Resource = [
-          aws_s3_bucket.csiro_consent_forms.arn,
+          "${aws_s3_bucket.csiro_consent_forms.arn}/*",
           "arn:aws:logs:*:*:*"
         ]
       }

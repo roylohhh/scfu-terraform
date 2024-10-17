@@ -8,7 +8,11 @@ const client = new S3Client({
 });
 
 // Consent form bucket
-const BUCKET_NAME = "csiro-consent-forms";
+const BUCKET_NAME = process.env.S3_BUCKET_NAME;
+
+if (!BUCKET_NAME) {
+  throw new Error('S3 bucket name is not defined in environment variables');
+}
 
 exports.handler = async (event) => {
   try {

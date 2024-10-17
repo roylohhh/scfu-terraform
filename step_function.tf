@@ -1,7 +1,7 @@
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "csiro_state_machine"
   role_arn = aws_iam_role.step_functions_exec_role.arn
-  type     = "EXPRESS"
+  # type     = "EXPRESS"
   definition = jsonencode(
 
     {
@@ -148,10 +148,12 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
       }
     }
   )
-
   depends_on = [
     module.lambda_validate_data,
     module.lambda_put_s3,
     module.lambda_dynamodb
-  ] //TODO: Update how lambda ARN is being imported
+  ]
 }
+
+
+

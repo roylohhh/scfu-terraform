@@ -1,13 +1,8 @@
 # outputs.tf
 
-output "unique_suffix" {
-  value       = random_string.unique_suffix.result
-  description = "Unique suffix generated for resource naming"
-}
-
-output "bucket_suffix" {
-  value       = random_id.bucket_suffix.hex
-  description = "Random ID generated for bucket naming"
+output "csiro_consent_bucket_name" {
+  value       = aws_s3_bucket.csiro_consent_forms.bucket
+  description = "Name of CSIRO Consent Forms S3 bucket"
 }
 
 output "csiro_api_id" {
