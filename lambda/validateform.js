@@ -6,10 +6,10 @@ const pdfSignature = [0x25, 0x50, 0x44, 0x46]; // Magic number for PDFs
 
 function isBase64PDF(base64Data) {
   // Decode the base64 data to a byte array and remove prefix, if present
-  const base64String = base64Data.split(',')[1] || base64Data;
+  const base64String = base64Data.split(",")[1] || base64Data;
 
   // Decode base64 to a byte array using Buffer in Node.js
-  const byteArray = Buffer.from(base64String, 'base64');
+  const byteArray = Buffer.from(base64String, "base64");
 
   // Check the first four bytes for the PDF file signature
   for (let i = 0; i < pdfSignature.length; i++) {
@@ -54,16 +54,16 @@ const validateDateOfBirth = (dob) => {
     return "Date of Birth is required.";
   }
 
-  const [day, month, year] = dob.split('-').map(Number);
+  const [day, month, year] = dob.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   const now = new Date();
   const minDate = new Date(1900, 0, 1);
 
   // Check if the date is valid
   if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
   ) {
     return "Invalid date of birth.";
   }
@@ -121,7 +121,6 @@ const validatePostcode = (postcode) => {
   return validateRegexField(postcode, postcodeRegex, "Postcode");
 };
 
-
 // This validation just confirms that a boolean was provided in the object
 const validateIsMinor = (isMinor) => {
   if (isMinor !== true && isMinor !== false) {
@@ -147,7 +146,11 @@ const validateGuardianPhoneNumber = (guardianPhone, isMinor) => {
   if (!guardianPhone) {
     return "Guardian's Phone Number is required.";
   }
-  return validateRegexField(guardianPhone, contactNumberRegex, "Guardian's Phone Number");
+  return validateRegexField(
+    guardianPhone,
+    contactNumberRegex,
+    "Guardian's Phone Number",
+  );
 };
 
 const validateStudyGroup = (studyGroup) => {
@@ -193,7 +196,7 @@ const validateScannedForm = (scannedForm) => {
     return "Scanned Form is required.";
   }
   if (!isBase64PDF(scannedForm)) {
-    return "Form must be PDF document."
+    return "Form must be PDF document.";
   }
   return null;
 };
@@ -229,13 +232,12 @@ const validateAdminFamilyName = (adminFamilyName) => {
 
 export const handler = async (event) => {
   try {
-
     // if (!event.payload || !event.payload.formData || !event.payload.scannedForm || !event.payload.admin) {
     if (!event.formData || !event.scannedForm || !event.admin) {
-      console.error('Error: Malformed JSON object');
+      console.error("Error: Malformed JSON object");
       return {
         status: "failure",
-        errors: "Malformed JSON object"
+        errors: "Malformed JSON object",
       };
     }
 
@@ -250,43 +252,49 @@ export const handler = async (event) => {
 
     // Array of validation functions and their corresponding field names
     const formDataValidations = [
-      { field: 'firstName', validate: validateFirstName },
-      { field: 'lastName', validate: validateLastName },
-      { field: 'dateOfBirth', validate: validateDateOfBirth },
-      { field: 'email', validate: validateEmail },
-      { field: 'contactNumber', validate: validatePhoneNumber },
-      { field: 'streetAddress', validate: validateStreetAddress },
-      { field: 'suburb', validate: validateSuburb },
-      { field: 'state', validate: validateState },
-      { field: 'postcode', validate: validatePostcode },
-      { field: 'isMinor', validate: validateIsMinor },
+      { field: "firstName", validate: validateFirstName },
+      { field: "lastName", validate: validateLastName },
+      { field: "dateOfBirth", validate: validateDateOfBirth },
+      { field: "email", validate: validateEmail },
+      { field: "contactNumber", validate: validatePhoneNumber },
+      { field: "streetAddress", validate: validateStreetAddress },
+      { field: "suburb", validate: validateSuburb },
+      { field: "state", validate: validateState },
+      { field: "postcode", validate: validatePostcode },
+      { field: "isMinor", validate: validateIsMinor },
       // These two fields are dependant on the minor status
-      { field: 'guardianName', validate: (value) => validateGuardianName(value, formData.isMinor) },
-      { field: 'guardianPhone', validate: (value) => validateGuardianPhoneNumber(value, formData.isMinor) },
-      { field: 'studyGroup', validate: validateStudyGroup },
-      { field: 'studyInterest', validate: validateStudyInterest },
-      { field: 'healthConditions', validate: validateHealthConditions },
-      { field: 'contactConsent', validate: validateContactConsent },
-      { field: 'mediaConsent', validate: validateMediaConsent },
+      {
+        field: "guardianName",
+        validate: (value) => validateGuardianName(value, formData.isMinor),
+      },
+      {
+        field: "guardianPhone",
+        validate: (value) =>
+          validateGuardianPhoneNumber(value, formData.isMinor),
+      },
+      { field: "studyGroup", validate: validateStudyGroup },
+      { field: "studyInterest", validate: validateStudyInterest },
+      { field: "healthConditions", validate: validateHealthConditions },
+      { field: "contactConsent", validate: validateContactConsent },
+      { field: "mediaConsent", validate: validateMediaConsent },
     ];
 
     const formValidations = [
-      { field: 'base64Data', validate: validateScannedForm },
-      { field: 'fileName', validate: validateScannedFormFileName }
-    ]
+      { field: "base64Data", validate: validateScannedForm },
+      { field: "fileName", validate: validateScannedFormFileName },
+    ];
 
     // These validations will check that these fields are non-empty
     const adminValidations = [
-      { field: 'id', validate: validateAdminId },
-      { field: 'name', validate: validateAdminName },
-      { field: 'familyName', validate: validateAdminFamilyName }
-    ]
+      { field: "id", validate: validateAdminId },
+      { field: "name", validate: validateAdminName },
+      { field: "familyName", validate: validateAdminFamilyName },
+    ];
 
     // Iterate through validations
     for (const { field, validate } of formDataValidations) {
       const error = validate(formData[field]);
       if (error) {
-
         // Collect form errors in an array
         errors[field] = error;
       }
@@ -304,25 +312,24 @@ export const handler = async (event) => {
     if (Object.keys(errors).length > 0) {
       return {
         status: "failure",
-        errors: errors
+        errors: errors,
       };
     }
 
     // If all fields are valid
     return {
       status: "success",
-      message: 'All fields are valid',
-      timeStamp: timeStamp
-
+      message: "All fields are valid",
+      timeStamp: timeStamp,
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     // Non-validation related error
     return {
       status: "error",
-      message: 'Internal server error'
+      message: "Internal server error",
     };
   }
 };
 
-module.exports = {handler};
+module.exports = { handler };

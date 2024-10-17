@@ -1,7 +1,7 @@
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "csiro_state_machine"
   role_arn = aws_iam_role.step_functions_exec_role.arn
-
+  type     = "EXPRESS"
   definition = jsonencode(
 
     {
@@ -46,6 +46,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
           "Type" : "Task",
           "Resource" : module.lambda_put_s3.lambda_function_arn, //TODO: Update how lambda ARN is being imported
           "Parameters" : {
+            "formData.$" : "$.formData",
             "scannedForm.$" : "$.scannedForm",
             "admin.$" : "$.admin",
             "timeStamp.$" : "$.validateLambdaOutput.timeStamp"
