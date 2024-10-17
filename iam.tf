@@ -131,7 +131,7 @@ resource "aws_iam_role_policy" "api_gateway_step_functions_policy" {
         Effect = "Allow"
         Action = ["states:StartSyncExecution"]
         Resource = [
-          aws_sfn_state_machine.sfn_state_machine.arn 
+          aws_sfn_state_machine.sfn_state_machine.arn
         ]
       }
     ]
