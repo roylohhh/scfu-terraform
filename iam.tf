@@ -60,7 +60,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 
-
+# Roy- I made changes to this line
 # IAM Role for Step Functions to Execute Lambda Functions
 resource "aws_iam_role" "step_functions_exec_role" {
   name = "step_functions_exec_role"
@@ -68,11 +68,25 @@ resource "aws_iam_role" "step_functions_exec_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = ""
-        Effect = "Allow"
+        Sid    = "",
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogDelivery",
+          "logs:GetLogDelivery",
+          "logs:UpdateLogDelivery",
+          "logs:DeleteLogDelivery",
+          "logs:ListLogDeliveries",
+          "logs:PutResourcePolicy",
+          "logs:DescribeResourcePolicies",
+          "logs:DescribeLogGroups",
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets"
+        ],
         Principal = {
           Service = "states.amazonaws.com"
-        }
+        },
         Action = "sts:AssumeRole"
       }
     ]

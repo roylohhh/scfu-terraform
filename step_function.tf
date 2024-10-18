@@ -1,7 +1,7 @@
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "csiro_state_machine"
   role_arn = aws_iam_role.step_functions_exec_role.arn
-  # type     = "EXPRESS"
+  type     = "EXPRESS" # comment this out for standard
   definition = jsonencode(
 
     {
