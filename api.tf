@@ -137,7 +137,16 @@ resource "aws_api_gateway_integration" "execute_post_integration" {
   type                    = "AWS"
   uri                     = "arn:aws:apigateway:ap-southeast-2:states:action/StartSyncExecution"
 
-  credentials = aws_iam_role.step_functions_exec_role.arn
+  credentials = aws_iam_role.api_gateway_to_step_functions_role.arn
+  request_templates = {
+    "application/json" = <<EOF
+    #set($data = $util.escapeJavaScript($input.json('$.input')))
+    {
+        "input": "$data",
+    "stateMachineArn": $input.json('$.statemachinearn')
+    }
+EOF
+  }
 }
 
 

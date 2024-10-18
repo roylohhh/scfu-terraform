@@ -10,5 +10,9 @@ resource "aws_s3_bucket" "csiro_consent_forms" {
   }
 }
 
-
-
+resource "aws_s3_bucket_versioning" "versioning_csiro_consent_forms" {
+  bucket = aws_s3_bucket.csiro_consent_forms.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}

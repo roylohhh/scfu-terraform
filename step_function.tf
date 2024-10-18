@@ -1,70 +1,92 @@
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "csiro_state_machine"
   role_arn = aws_iam_role.step_functions_exec_role.arn
-  type     = "EXPRESS" # comment this out for standard
+  type     = "EXPRESS"
+
   definition = jsonencode(
 
     {
       "StartAt" : "Validate Data",
       "States" : {
-        "Validate Data" : {
-          "Type" : "Task",
-          "Resource" : module.lambda_validate_data.lambda_function_arn, // TODO:Update how lambda ARN is being imported
-          "Parameters" : {
-            "formData.$" : "$.formData",
-            "scannedForm.$" : "$.scannedForm",
-            "admin.$" : "$.admin"
-          },
-          "Retry" : [
-            {
-              "ErrorEquals" : [
-                "Lambda.ServiceException",
-                "Lambda.AWSLambdaException",
-                "Lambda.SdkClientException",
-                "Lambda.TooManyRequestsException"
-              ],
-              "IntervalSeconds" : 1,
-              "MaxAttempts" : 3,
-              "BackoffRate" : 2
-            }
-          ],
-          "Next" : "Is Data Valid",
-          "ResultPath" : "$.validateLambdaOutput"
-        },
-        "Is Data Valid" : {
-          "Type" : "Choice",
+        "Check Upload Status" : {
           "Choices" : [
             {
-              "Variable" : "$.validateLambdaOutput.status",
+              "Next" : "Write to DynamoDB",
               "StringEquals" : "success",
-              "Next" : "Upload PDF"
+              "Variable" : "$.formUploadlambdaOutput.status"
             }
           ],
-          "Default" : "Handle Errors"
+          "Default" : "Handle UploadPDF Error",
+          "Type" : "Choice"
+        },
+        "Check Write Status" : {
+          "Choices" : [
+            {
+              "Next" : "Handle Success",
+              "StringEquals" : "success",
+              "Variable" : "$.dynamoDbOutput.status"
+            }
+          ],
+          "Default" : "Handle DynamoDB Error",
+          "Type" : "Choice"
+        },
+        "Handle DynamoDB Error" : {
+          "InputPath" : "$.dynamoDbOutput",
+          "Parameters" : {
+            "message.$" : "$.message",
+            "status.$" : "$.status",
+            "statusCode" : 400
+          },
+          "Type" : "Pass",
+          "End" : true
+        },
+        "Handle UploadPDF Error" : {
+          "InputPath" : "$.formUploadlambdaOutput",
+          "Parameters" : {
+            "message.$" : "$.message",
+            "status.$" : "$.status",
+            "statusCode" : 400
+          },
+          "Type" : "Pass",
+          "End" : true
+        },
+        "Handle ValidateData Error" : {
+          "End" : true,
+          "InputPath" : "$.validateLambdaOutput",
+          "Parameters" : {
+            "errors.$" : "$.errors",
+            "status.$" : "$.status",
+            "statusCode" : 400
+          },
+          "Type" : "Pass"
+        },
+        "Handle Success" : {
+          "End" : true,
+          "Type" : "Pass",
+          "Parameters" : {
+            "message.$" : "$.message",
+            "status.$" : "$.status",
+            "statusCode" : 200
+          },
+          "InputPath" : "$.dynamoDbOutput"
+        },
+        "Is Data Valid" : {
+          "Choices" : [
+            {
+              "Next" : "Upload PDF",
+              "StringEquals" : "success",
+              "Variable" : "$.validateLambdaOutput.status"
+            }
+          ],
+          "Default" : "Handle ValidateData Error",
+          "Type" : "Choice"
+        },
+        "Step Functions Error" : {
+          "CausePath" : "$.Cause",
+          "ErrorPath" : "$.Error",
+          "Type" : "Fail"
         },
         "Upload PDF" : {
-          "Type" : "Task",
-          "Resource" : module.lambda_put_s3.lambda_function_arn, //TODO: Update how lambda ARN is being imported
-          "Parameters" : {
-            "formData.$" : "$.formData",
-            "scannedForm.$" : "$.scannedForm",
-            "admin.$" : "$.admin",
-            "timeStamp.$" : "$.validateLambdaOutput.timeStamp"
-          },
-          "Retry" : [
-            {
-              "ErrorEquals" : [
-                "Lambda.ServiceException",
-                "Lambda.AWSLambdaException",
-                "Lambda.SdkClientException",
-                "Lambda.TooManyRequestsException"
-              ],
-              "IntervalSeconds" : 1,
-              "MaxAttempts" : 3,
-              "BackoffRate" : 2
-            }
-          ],
-          "Next" : "Check Upload Status",
           "Catch" : [
             {
               "ErrorEquals" : [
@@ -73,39 +95,19 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
               "Next" : "Step Functions Error"
             }
           ],
-          "ResultPath" : "$.formUploadlambdaOutput",
-          "InputPath" : "$"
-        },
-        "Check Upload Status" : {
-          "Type" : "Choice",
-          "Choices" : [
-            {
-              "Variable" : "$.formUploadlambdaOutput.status",
-              "StringEquals" : "success",
-              "Next" : "Write to DynamoDB"
-            }
-          ],
-          "Default" : "Handle Errors"
-        },
-        "Step Functions Error" : {
-          "Type" : "Fail",
-          "ErrorPath" : "$.Error",
-          "CausePath" : "$.Cause"
-        },
-        "Write to DynamoDB" : {
-          "Type" : "Task",
-          "Resource" : module.lambda_dynamodb.lambda_function_arn, //TODO: Update how lambda ARN is being imported
+          "InputPath" : "$",
+          "Next" : "Check Upload Status",
           "Parameters" : {
-            "formData.$" : "$.formData",
             "admin.$" : "$.admin",
-            "originalS3ObjectKey.$" : "$.formUploadlambdaOutput.originalS3ObjectKey",
-            "originalS3Hash.$" : "$.formUploadlambdaOutput.originalS3Hash",
-            "watermarkedS3ObjectKey.$" : "$.formUploadlambdaOutput.watermarkedS3ObjectKey",
-            "watermarkedS3Hash.$" : "$.formUploadlambdaOutput.watermarkedS3Hash",
+            "formData.$" : "$.formData",
+            "scannedForm.$" : "$.scannedForm",
             "timeStamp.$" : "$.validateLambdaOutput.timeStamp"
           },
+          "Resource" : module.lambda_put_s3.lambda_function_arn,
+          "ResultPath" : "$.formUploadlambdaOutput",
           "Retry" : [
             {
+              "BackoffRate" : 2,
               "ErrorEquals" : [
                 "Lambda.ServiceException",
                 "Lambda.AWSLambdaException",
@@ -113,37 +115,78 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
                 "Lambda.TooManyRequestsException"
               ],
               "IntervalSeconds" : 1,
-              "MaxAttempts" : 3,
-              "BackoffRate" : 2
+              "MaxAttempts" : 3
             }
           ],
-          "Next" : "Check Write Status",
-          "ResultPath" : "$.dynamoDbOutput"
+          "Type" : "Task"
         },
-        "Check Write Status" : {
-          "Type" : "Choice",
-          "Choices" : [
-            {
-              "Variable" : "$.dynamoDbOutput.status",
-              "StringEquals" : "success",
-              "Next" : "Handle Success"
-            }
-          ],
-          "Default" : "Handle Errors"
-        },
-        "Handle Success" : {
-          "Type" : "Pass",
-          "End" : true
-        },
-        "Handle Errors" : {
-          "Type" : "Pass",
-          "End" : true,
+        "Validate Data" : {
+          "Next" : "Is Data Valid",
           "Parameters" : {
-            "statusCode" : 400,
-            "status.$" : "$.status",
-            "errors.$" : "$.errors"
+            "admin.$" : "$.admin",
+            "formData.$" : "$.formData",
+            "scannedForm.$" : "$.scannedForm"
           },
-          "InputPath" : "$"
+          "Resource" : module.lambda_validate_data.lambda_function_arn,
+          "ResultPath" : "$.validateLambdaOutput",
+          "Retry" : [
+            {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [
+                "Lambda.ServiceException",
+                "Lambda.AWSLambdaException",
+                "Lambda.SdkClientException",
+                "Lambda.TooManyRequestsException"
+              ],
+              "IntervalSeconds" : 1,
+              "MaxAttempts" : 3
+            }
+          ],
+          "Type" : "Task",
+          "Catch" : [
+            {
+              "ErrorEquals" : [
+                "States.ALL"
+              ],
+              "Next" : "Step Functions Error"
+            }
+          ]
+        },
+        "Write to DynamoDB" : {
+          "Next" : "Check Write Status",
+          "Parameters" : {
+            "admin.$" : "$.admin",
+            "formData.$" : "$.formData",
+            "originalS3Hash.$" : "$.formUploadlambdaOutput.originalS3Hash",
+            "originalS3ObjectKey.$" : "$.formUploadlambdaOutput.originalS3ObjectKey",
+            "timeStamp.$" : "$.validateLambdaOutput.timeStamp",
+            "watermarkedS3Hash.$" : "$.formUploadlambdaOutput.watermarkedS3Hash",
+            "watermarkedS3ObjectKey.$" : "$.formUploadlambdaOutput.watermarkedS3ObjectKey"
+          },
+          "Resource" : module.lambda_dynamodb.lambda_function_arn,
+          "ResultPath" : "$.dynamoDbOutput",
+          "Retry" : [
+            {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [
+                "Lambda.ServiceException",
+                "Lambda.AWSLambdaException",
+                "Lambda.SdkClientException",
+                "Lambda.TooManyRequestsException"
+              ],
+              "IntervalSeconds" : 1,
+              "MaxAttempts" : 3
+            }
+          ],
+          "Type" : "Task",
+          "Catch" : [
+            {
+              "ErrorEquals" : [
+                "States.ALL"
+              ],
+              "Next" : "Step Functions Error"
+            }
+          ]
         }
       }
     }
@@ -153,7 +196,10 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
     module.lambda_put_s3,
     module.lambda_dynamodb
   ]
+
+  logging_configuration {
+    log_destination        = "${aws_cloudwatch_log_group.csiro_state_machine_log_group.arn}:*"
+    include_execution_data = true
+    level                  = "ERROR"
+  }
 }
-
-
-

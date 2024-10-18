@@ -62,13 +62,31 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # Roy- I made changes to this line
 # IAM Role for Step Functions to Execute Lambda Functions
+
 resource "aws_iam_role" "step_functions_exec_role" {
   name = "step_functions_exec_role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "",
+        Effect = "Allow",
+        Principal = {
+          Service = "states.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  description = "Allows Step Functions to access AWS resources on your behalf."
+}
+
+resource "aws_iam_policy" "step_functions_policy" {
+  name        = "step_functions_policy"
+  description = "Policy for Step Functions to access necessary AWS resources."
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
         Effect = "Allow",
         Action = [
           "logs:CreateLogDelivery",
@@ -84,15 +102,17 @@ resource "aws_iam_role" "step_functions_exec_role" {
           "xray:GetSamplingRules",
           "xray:GetSamplingTargets"
         ],
-        Principal = {
-          Service = "states.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
+        Resource = "*"
       }
     ]
   })
-  description = "Allows Step Functions to access AWS resources on your behalf."
 }
+
+resource "aws_iam_role_policy_attachment" "attach_step_functions_policy" {
+  role       = aws_iam_role.step_functions_exec_role.name
+  policy_arn = aws_iam_policy.step_functions_policy.arn
+}
+
 
 # IAM Role Policy for Step Functions to Access/Invoke Lambda Functions
 resource "aws_iam_role_policy" "step_functions_lambda_policy" {
