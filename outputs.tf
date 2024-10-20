@@ -10,9 +10,13 @@ output "csiro_api_id" {
 }
 
 output "user_pool_id" {
-  value = aws_cognito_user_pool.user_pool.id
+  value = aws_cognito_user_pool.dcp-users.id
 }
 
 output "cognito_client_id" {
-  value = aws_cognito_user_pool_client.user_pool_client.id
+  value = aws_cognito_user_pool_client.dcp-users-client.id
+}
+
+output "state_machine_id" {
+  value = aws_sfn_state_machine.sfn_state_machine.arn
 }
