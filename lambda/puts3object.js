@@ -11,7 +11,7 @@ const client = new S3Client({
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 if (!BUCKET_NAME) {
-  throw new Error('S3 bucket name is not defined in environment variables');
+  throw new Error("S3 bucket name is not defined in environment variables");
 }
 
 exports.handler = async (event) => {
@@ -51,12 +51,12 @@ exports.handler = async (event) => {
 
     // Create the PutObjectCommand for the original document
     const firstDocumentUploadCommand = new PutObjectCommand(
-      originalDocumentUploadParams
+      originalDocumentUploadParams,
     );
 
     // Upload to S3
     const firstDocumentUploadResult = await client.send(
-      firstDocumentUploadCommand
+      firstDocumentUploadCommand,
     );
 
     // Get SHA-256 checksum of the first uploaded document
@@ -66,8 +66,7 @@ exports.handler = async (event) => {
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
     // Construct watermark string
-    const watermarkText =
-      `${admin.name} ${admin.familyName}\t(${admin.id})\n${firstDocumentChecksum}`;
+    const watermarkText = `${admin.name} ${admin.familyName}\t(${admin.id})\n${firstDocumentChecksum}`;
 
     // Add watermark to each page
     const pages = pdfDoc.getPages();
@@ -110,10 +109,12 @@ exports.handler = async (event) => {
       message: "File uploaded successfully with watermark!",
       data: uploadResult,
       // Original and Watermarked documents key and checksum
-      originalS3ObjectKey: originalDocumentName,
-      originalS3Hash: firstDocumentChecksum,
-      watermarkedS3ObjectKey: watermarkedDocumentName,
-      watermarkedS3Hash: watermarkedDocumentChecksum,
+      s3Map: {
+        originalS3ObjectKey: originalDocumentName,
+        originalS3Hash: firstDocumentChecksum,
+        watermarkedS3ObjectKey: watermarkedDocumentName,
+        watermarkedS3Hash: watermarkedDocumentChecksum,
+      },
     };
   } catch (error) {
     return {

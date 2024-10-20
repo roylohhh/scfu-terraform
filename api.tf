@@ -63,7 +63,7 @@ resource "aws_api_gateway_integration_response" "execute_options_integration_res
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'http://10.0.0.16:3000'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'http://localhost:3000'", //CHANGEME
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -90,7 +90,7 @@ resource "aws_api_gateway_integration_response" "execute_post_integration_respon
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,OPTIONS,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'http://10.0.0.16:3000'", //CHANGEME
+    "method.response.header.Access-Control-Allow-Origin"      = "'http://localhost:3000'", //CHANGEME
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 

@@ -157,11 +157,9 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
           "Parameters" : {
             "admin.$" : "$.admin",
             "formData.$" : "$.formData",
-            "originalS3Hash.$" : "$.formUploadlambdaOutput.originalS3Hash",
-            "originalS3ObjectKey.$" : "$.formUploadlambdaOutput.originalS3ObjectKey",
+            "s3Map.$" : "$.formUploadlambdaOutput.s3Map",
             "timeStamp.$" : "$.validateLambdaOutput.timeStamp",
-            "watermarkedS3Hash.$" : "$.formUploadlambdaOutput.watermarkedS3Hash",
-            "watermarkedS3ObjectKey.$" : "$.formUploadlambdaOutput.watermarkedS3ObjectKey"
+
           },
           "Resource" : module.lambda_dynamodb.lambda_function_arn,
           "ResultPath" : "$.dynamoDbOutput",
@@ -200,6 +198,6 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
   logging_configuration {
     log_destination        = "${aws_cloudwatch_log_group.csiro_state_machine_log_group.arn}:*"
     include_execution_data = true
-    level                  = "ERROR"
+    level                  = "ALL"
   }
 }

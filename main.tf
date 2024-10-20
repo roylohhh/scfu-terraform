@@ -13,7 +13,8 @@ module "lambda_dynamodb" {
   filename             = "${path.module}/lambda/build/putitem.zip"
   lambda_exec_role_arn = aws_iam_role.lambda_exec_role.arn
   environment_variables = {
-    PARTICIPANT_CONSENT_TABLE = "consent_form_table"
+    PARTICIPANT_CONSENT_TABLE = "consent_form_table",
+    S3_BUCKET_NAME            = aws_s3_bucket.csiro_consent_forms.bucket
   }
   timeout = 15
 }
