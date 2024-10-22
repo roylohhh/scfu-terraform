@@ -16,7 +16,8 @@ module "lambda_dynamodb" {
     PARTICIPANT_CONSENT_TABLE = "consent_form_table",
     S3_BUCKET_NAME            = aws_s3_bucket.csiro_consent_forms.bucket
   }
-  timeout = 15
+  timeout     = 5
+  memory_size = 512
 }
 
 # Call the Lambda module for S3 interaction
@@ -30,7 +31,8 @@ module "lambda_put_s3" {
   environment_variables = {
     S3_BUCKET_NAME = aws_s3_bucket.csiro_consent_forms.bucket
   }
-  timeout = 15
+  timeout     = 5
+  memory_size = 512
 }
 
 # Call the Lambda module
@@ -44,5 +46,6 @@ module "lambda_validate_data" {
   environment_variables = {
 
   }
-  timeout = 15
+  timeout     = 5
+  memory_size = 512
 }
