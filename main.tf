@@ -7,7 +7,7 @@ provider "aws" {
 # Call the Lambda module for DynamoDB interaction
 module "lambda_dynamodb" {
   source               = "./modules/lambda-module"
-  function_name        = "LambdaWriteDynamoDBFunction"
+  function_name        = "PutDynamoDbItem"
   handler              = "putitem.putFormItemHandler"
   runtime              = "nodejs20.x"
   filename             = "${path.module}/lambda/build/putitem.zip"
@@ -23,7 +23,7 @@ module "lambda_dynamodb" {
 # Call the Lambda module for S3 interaction
 module "lambda_put_s3" {
   source               = "./modules/lambda-module"
-  function_name        = "LambdaPutS3Object"
+  function_name        = "PutS3Object"
   handler              = "puts3object.handler"
   runtime              = "nodejs20.x"
   filename             = "${path.module}/lambda/build/puts3object.zip"
@@ -38,7 +38,7 @@ module "lambda_put_s3" {
 # Call the Lambda module
 module "lambda_validate_data" {
   source               = "./modules/lambda-module"
-  function_name        = "ValidateDataLambdaFunction"
+  function_name        = "ValidateData"
   handler              = "validateform.handler"
   runtime              = "nodejs20.x"
   filename             = "${path.module}/lambda/build/validateform.zip"
