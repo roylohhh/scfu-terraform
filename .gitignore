@@ -1,0 +1,11 @@
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup 
+.terraform.lock.hcl
+
+node_modules/
+lambda-layer/nodejs/node_modules
+lambda/node_modules
+
+*.zip
+.env
