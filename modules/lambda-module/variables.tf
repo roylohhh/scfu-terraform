@@ -28,3 +28,15 @@ variable "layers" {
   type        = list(string)
   default     = []
 }
+
+variable "timeout" {
+  description = "timeout"
+  type        = number
+  default     = 15
+}
+
+variable "memory_size" {
+  description = "memory size"
+  type        = number
+  default     = 512
+}

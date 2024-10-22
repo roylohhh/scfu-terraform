@@ -1,16 +1,22 @@
 # outputs.tf
 
-output "lambda_layer_bucket_name" {
-  value       = aws_s3_bucket.lambda_layer_bucket.bucket
-  description = "The name of the S3 bucket storing the Lambda layer"
+output "csiro_consent_bucket_name" {
+  value       = aws_s3_bucket.csiro_consent_forms.bucket
+  description = "Name of CSIRO Consent Forms S3 bucket"
 }
 
-output "unique_suffix" {
-  value       = random_string.unique_suffix.result
-  description = "Unique suffix generated for resource naming"
+output "csiro_api_id" {
+  value = aws_api_gateway_rest_api.csiro_api.id
 }
 
-output "bucket_suffix" {
-  value       = random_id.bucket_suffix.hex
-  description = "Random ID generated for bucket naming"
+output "user_pool_id" {
+  value = aws_cognito_user_pool.dcp-users.id
+}
+
+output "cognito_client_id" {
+  value = aws_cognito_user_pool_client.dcp-users-client.id
+}
+
+output "state_machine_id" {
+  value = aws_sfn_state_machine.sfn_state_machine.arn
 }

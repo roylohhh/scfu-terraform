@@ -4,6 +4,8 @@ resource "aws_lambda_function" "lambda_function" {
   role          = var.lambda_exec_role_arn
   handler       = var.handler
   runtime       = var.runtime
+  timeout       = var.timeout
+  memory_size   = var.memory_size
 
   source_code_hash = filebase64sha256(var.filename)
 
@@ -14,6 +16,3 @@ resource "aws_lambda_function" "lambda_function" {
   layers = var.layers
 }
 
-output "lambda_function_arn" {
-  value = aws_lambda_function.lambda_function.arn
-}

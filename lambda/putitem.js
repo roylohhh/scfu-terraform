@@ -1,138 +1,158 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
-const { v4: uuidv4 } = require('uuid');
-const crypto = require('crypto');
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  DynamoDBDocumentClient,
+  BatchWriteCommand,
+} = require("@aws-sdk/lib-dynamodb");
+const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
+
+// Consent form bucket
+const BUCKET_NAME = "csiro-consent-forms";
+
+// Initialize the S3 Client
+const s3Client = new S3Client({
+  region: "ap-southeast-2",
+});
 
 // Core hashing logic
 const hashData = (data) => {
-    // Generate a random 16-byte salt
-    const salt = crypto.randomBytes(16).toString('hex');
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.createHash("sha256");
+  hash.update(JSON.stringify(data) + salt);
+  const hashedData = hash.digest("hex");
 
-    // Create a hash of the data with the salt
-    const hash = crypto.createHash('sha256');
-    hash.update(JSON.stringify(data) + salt);
-    const hashedData = hash.digest('hex');
-
-    const response = {
-        formHash: hashedData,
-        saltKey: salt
-    };
-
-    return response;
+  return {
+    formHash: hashedData,
+    saltKey: salt,
+  };
 };
 
-// DynamoDB putFormItem event
-const client = new DynamoDBClient({
-    region: 'ap-southeast-2',
-});
+// Function to handle rollback of uploaded files
+const rollbackUpload = async (fileKeys) => {
+  const bucketName = process.env.S3_BUCKET_NAME;
 
+  if (!bucketName) {
+    throw new Error("S3 bucket name is not defined in environment variables");
+  }
+
+  if (!fileKeys || fileKeys.length === 0) {
+    console.log("No files to roll back.");
+    return;
+  }
+
+  try {
+    for (const key of fileKeys) {
+      if (key) {
+        const deleteParams = {
+          Bucket: bucketName,
+          Key: key,
+        };
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+        console.log(`Successfully rolled back (deleted) file with key: ${key}`);
+      }
+    }
+  } catch (err) {
+    console.error("Error rolling back files from S3:", err.message);
+    throw new Error(`Failed to roll back files from S3: ${err.message}`);
+  }
+};
+
+// DynamoDB client setup
+const client = new DynamoDBClient({ region: "ap-southeast-2" });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 // Get the DynamoDB table name from environment variables
 const tableName = process.env.PARTICIPANT_CONSENT_TABLE;
 
 const putFormItemHandler = async (event) => {
-
-    if (event.httpMethod !== 'POST') {
-        throw new Error(`postMethod only accepts POST method, you tried: ${event.httpMethod} method.`);
-    }
-
+  try {
     if (!tableName) {
-        throw new Error("Table name is not defined in environment variables");
+      throw new Error("Table name is not defined in environment variables");
     }
 
-    // Get hashMap, consentForm, and optional s3Map from the body of the request
-    const body = JSON.parse(event.body);
+    const requiredFields = ["formData", "admin", "timeStamp"];
 
-    // Log the size of the consent form for diagnostic purposes
-    console.log(`Size of consentForm: ${JSON.stringify(body.consentForm).length} bytes`);
+    const missingFields = requiredFields.filter((field) => !event[field]);
 
-    // Map event data to be written to DynamoDb table
-    const id = uuidv4();
-    const consentForm = body.consentForm;
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(", ")}.`);
+    }
 
-    // Timing log for the hashing operation
-    const startHashing = Date.now();
-    const hashMap = hashData(consentForm);
-    console.log(`Hashing took: ${Date.now() - startHashing} ms`);
+    const { formData, admin, timeStamp, s3Map } = event;
+    const hashMap = hashData(formData);
 
-    const s3Map = body.s3Map;
-    const admin = body.admin;
-
-    // Validate required fields
     if (!hashMap || !hashMap.formHash || !hashMap.saltKey) {
-        throw new Error('hashMap with formHash and saltKey is required.');
+      throw new Error("hashMap with formHash and saltKey is required.");
     }
-    if (!consentForm) {
-        throw new Error('consentForm is required.');
-    }
-    if (!admin || !admin.adminName) {
-        throw new Error('admin with adminName required.');
-    }
+
+    const id = uuidv4();
 
     const items = [
-        {
-            // Version 0 Item - represents the latest version for this item
-            id: id,
-            version: 0,
-            hashMap: { 
-                formHash: hashMap.formHash,
-                saltKey: hashMap.saltKey
-            },
-            consentForm: consentForm,
-            admin: admin,
-            latestVersion: 1
+      {
+        id,
+        version: 0,
+        hashMap: {
+          formHash: hashMap.formHash,
+          saltKey: hashMap.saltKey,
         },
-        {
-              // Version 1 Item - represents the first version for this item to be created
-            id: id,
-            version: 1,
-            hashMap: {
-                formHash: hashMap.formHash,
-                saltKey: hashMap.saltKey
-            },
-            consentForm: consentForm,
-            admin: admin
-        }
+        consentForm: formData,
+        admin,
+        timeStamp,
+        latestVersion: 1,
+      },
+      {
+        id,
+        version: 1,
+        hashMap: {
+          formHash: hashMap.formHash,
+          saltKey: hashMap.saltKey,
+        },
+        consentForm: formData,
+        admin,
+        timeStamp,
+      },
     ];
 
-    // Add optional s3Map attribute if provided
-    if (s3Map && s3Map.s3Hash && s3Map.s3ObjectKey) {
-        items.forEach(item => {
-            item.s3Map = {
-                s3Hash: s3Map.s3Hash,
-                s3ObjectKey: s3Map.s3ObjectKey
-            };
-        });
+    // If s3Map contains all object keys and hashes, add it to each item
+    if (
+      s3Map?.originalS3ObjectKey &&
+      s3Map?.originalS3Hash &&
+      s3Map?.watermarkedS3ObjectKey &&
+      s3Map?.watermarkedS3Hash
+    ) {
+      items.forEach((item) => {
+        item.s3Map = { ...s3Map };
+      });
     }
 
     const params = {
-        RequestItems: {
-            [tableName]: items.map(item => ({
-                PutRequest: {
-                    Item: item
-                }
-            }))
-        }
+      RequestItems: {
+        [tableName]: items.map((item) => ({
+          PutRequest: {
+            Item: item,
+          },
+        })),
+      },
     };
 
-    try {
-        // Timing log for DynamoDB BatchWriteCommand
-        const startWrite = Date.now();
-        await ddbDocClient.send(new BatchWriteCommand(params));
-        console.log(`DynamoDB BatchWrite took: ${Date.now() - startWrite} ms`);
-    } catch (err) {
-        console.log("Error", err.stack);
-    }
+    await ddbDocClient.send(new BatchWriteCommand(params));
 
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify(body)
+    return {
+      status: "success",
+      message: "Form submitted successfully",
     };
+  } catch (err) {
+    console.error("Error occurred:", err.message);
 
-    // All log statements are written to CloudWatch
-    console.info(`response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`);
-    return response;
+    const fileKeys = [event.originalS3ObjectKey, event.watermarkedS3ObjectKey];
+    await rollbackUpload(fileKeys);
+
+    return {
+      status: "failure",
+      message: err.message,
+    };
+  }
 };
 
 module.exports = { putFormItemHandler };
