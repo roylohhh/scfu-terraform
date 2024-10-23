@@ -143,30 +143,5 @@ resource "aws_api_gateway_deployment" "csiro_api_gateway_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.csiro_api.id
-  # stage_name  = "prod"
-}
-
-# Create the API Gateway Stage
-resource "aws_api_gateway_stage" "csiro_api_stage" {
-  rest_api_id   = aws_api_gateway_rest_api.csiro_api.id
-  stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.csiro_api_gateway_deployment.id
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.csiro_api_gateway_log_group.arn
-    format          = "$context.requestId $context.identity.sourceIp $context.requestTime $context.httpMethod $context.resourcePath $context.status $context.responseLength"
-  }
-}
-
-
-# API Gateway Stage with logging enabled
-resource "aws_api_gateway_method_settings" "csiro_api_method_settings" {
-  rest_api_id = aws_api_gateway_rest_api.csiro_api.id
-  stage_name  = aws_api_gateway_stage.csiro_api_stage.stage_name # Reference the stage here
-  method_path = "*/*"                                            # Log all methods
-  settings {
-    logging_level      = "INFO" # Options: OFF, ERROR, INFO, or DEBUG
-    data_trace_enabled = true
-    metrics_enabled    = true
-  }
+  stage_name  = "prod"
 }
