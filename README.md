@@ -41,29 +41,29 @@ These credentials will be used by Terraform and the AWS CLI to deploy the Lambda
 
 ## Setup
 ### Install Node Modules
-Navigate to the lambda-layer/nodejs/ directory and install the required Node.js modules for your Lambda functions' dependencies:
+Navigate to the lambda directory and install the required Node.js modules for your Lambda functions' dependencies:
 
 ```bash
-cd lambda-layer/nodejs/
+cd lambda
 npm install
 ```
 
+### Run build script
+```bash
+node build.js
+```
+
 ### Zip Lambda Functions
-To prepare the Lambda function for deployment, compress the necessary files
+To prepare the Lambda function for deployment, cd into build folder and compress the necessary files
 
 ```bash
-cd lambda/
+cd build
 zip -r putitem.zip putitem.js
+zip -r puts3object.zip puts3object.js
+zip -r validateform.zip validateform.js
 ```
 
-For Lambda layers:
-
-```bash
-cd lambda-layer
-zip -r nodejs.zip .
-```
-
-Ensure that the zipped files are located in the correct directories for deployment.
+Ensure that the zipped files are located in the correct directory for deployment.
 
 ## Terraform Workflow Guide
 ### Verify Terraform Installation and Version
